@@ -1,0 +1,215 @@
+{
+  "Area": {
+    "A": {
+      "n_policies": 103957,
+      "mean_pure_premium": 266.68623897705857,
+      "pct_medium_or_high": 3.113787431341805
+    },
+    "B": {
+      "n_policies": 75459,
+      "mean_pure_premium": 499.5629090746459,
+      "pct_medium_or_high": 3.3448627731615845
+    },
+    "C": {
+      "n_policies": 191880,
+      "mean_pure_premium": 290.5501266293864,
+      "pct_medium_or_high": 3.5074004586199705
+    },
+    "D": {
+      "n_policies": 151590,
+      "mean_pure_premium": 396.86274956623345,
+      "pct_medium_or_high": 3.9824526683818195
+    },
+    "E": {
+      "n_policies": 137167,
+      "mean_pure_premium": 535.1489047355259,
+      "pct_medium_or_high": 4.1533313406285775
+    },
+    "F": {
+      "n_policies": 17954,
+      "mean_pure_premium": 229.8404884884281,
+      "pct_medium_or_high": 3.9712598863762953
+    }
+  },
+  "VehBrand": {
+    "B1": {
+      "n_policies": 162730,
+      "mean_pure_premium": 346.59679804838055,
+      "pct_medium_or_high": 3.996190007988693
+    },
+    "B10": {
+      "n_policies": 17707,
+      "mean_pure_premium": 282.2004936705105,
+      "pct_medium_or_high": 4.133958321567741
+    },
+    "B11": {
+      "n_policies": 13585,
+      "mean_pure_premium": 492.92677713224816,
+      "pct_medium_or_high": 4.608023555391976
+    },
+    "B12": {
+      "n_policies": 166024,
+      "mean_pure_premium": 230.65450340237973,
+      "pct_medium_or_high": 2.3044860983954125
+    },
+    "B13": {
+      "n_policies": 12178,
+      "mean_pure_premium": 247.82489243984529,
+      "pct_medium_or_high": 4.196091312202332
+    },
+    "B14": {
+      "n_policies": 4047,
+      "mean_pure_premium": 149.6201676153838,
+      "pct_medium_or_high": 3.138127007659995
+    },
+    "B2": {
+      "n_policies": 159861,
+      "mean_pure_premium": 634.3584944116741,
+      "pct_medium_or_high": 4.057900300886395
+    },
+    "B3": {
+      "n_policies": 53395,
+      "mean_pure_premium": 376.56731712205385,
+      "pct_medium_or_high": 4.315010768798577
+    },
+    "B4": {
+      "n_policies": 25179,
+      "mean_pure_premium": 471.49344414109174,
+      "pct_medium_or_high": 4.182056475634457
+    },
+    "B5": {
+      "n_policies": 34753,
+      "mean_pure_premium": 248.9221318569712,
+      "pct_medium_or_high": 4.546370097545536
+    },
+    "B6": {
+      "n_policies": 28548,
+      "mean_pure_premium": 238.60406732224595,
+      "pct_medium_or_high": 4.164915230489001
+    }
+  },
+  "VehGas": {
+    "Diesel": {
+      "n_policies": 332136,
+      "mean_pure_premium": 342.51206983999674,
+      "pct_medium_or_high": 3.82373485560132
+    },
+    "Regular": {
+      "n_policies": 345871,
+      "mean_pure_premium": 419.527333958024,
+      "pct_medium_or_high": 3.538313417430198
+    }
+  },
+  "Region": {
+    "R11": {
+      "n_policies": 69791,
+      "mean_pure_premium": 511.1917002843006,
+      "pct_medium_or_high": 3.4288088722041525
+    },
+    "R21": {
+      "n_policies": 3026,
+      "mean_pure_premium": 1473.5731065674313,
+      "pct_medium_or_high": 2.313284864507601
+    },
+    "R22": {
+      "n_policies": 7994,
+      "mean_pure_premium": 580.4391082267668,
+      "pct_medium_or_high": 3.7778333750312734
+    },
+    "R23": {
+      "n_policies": 8784,
+      "mean_pure_premium": 113.58197621461225,
+      "pct_medium_or_high": 2.379326047358834
+    },
+    "R24": {
+      "n_policies": 160601,
+      "mean_pure_premium": 449.8469625802752,
+      "pct_medium_or_high": 3.8991039906351768
+    },
+    "R25": {
+      "n_policies": 10893,
+      "mean_pure_premium": 334.4540381970286,
+      "pct_medium_or_high": 3.938309005783531
+    },
+    "R26": {
+      "n_policies": 10492,
+      "mean_pure_premium": 172.72137705494418,
+      "pct_medium_or_high": 3.1261913839115514
+    },
+    "R31": {
+      "n_policies": 27285,
+      "mean_pure_premium": 397.57392412875123,
+      "pct_medium_or_high": 3.1958951805021076
+    },
+    "R41": {
+      "n_policies": 12990,
+      "mean_pure_premium": 279.92135939160005,
+      "pct_medium_or_high": 3.4795996920708236
+    },
+    "R42": {
+      "n_policies": 2200,
+      "mean_pure_premium": 150.67599534040926,
+      "pct_medium_or_high": 3.772727272727273
+    },
+    "R43": {
+      "n_policies": 1326,
+      "mean_pure_premium": 189.009199932074,
+      "pct_medium_or_high": 2.7149321266968327
+    },
+    "R52": {
+      "n_policies": 38751,
+      "mean_pure_premium": 371.7211860980355,
+      "pct_medium_or_high": 3.865706691440221
+    },
+    "R53": {
+      "n_policies": 42122,
+      "mean_pure_premium": 307.3852005116097,
+      "pct_medium_or_high": 4.256682968520013
+    },
+    "R54": {
+      "n_policies": 19046,
+      "mean_pure_premium": 231.01540259616684,
+      "pct_medium_or_high": 4.016591410269873
+    },
+    "R72": {
+      "n_policies": 31329,
+      "mean_pure_premium": 217.31989984277774,
+      "pct_medium_or_high": 3.144051836956175
+    },
+    "R73": {
+      "n_policies": 17141,
+      "mean_pure_premium": 100.84112593015361,
+      "pct_medium_or_high": 2.041887871186045
+    },
+    "R74": {
+      "n_policies": 4567,
+      "mean_pure_premium": 165.34917096487402,
+      "pct_medium_or_high": 4.028902999781038
+    },
+    "R82": {
+      "n_policies": 84752,
+      "mean_pure_premium": 561.3778916255532,
+      "pct_medium_or_high": 4.7220124598829525
+    },
+    "R83": {
+      "n_policies": 5287,
+      "mean_pure_premium": 192.4137982574551,
+      "pct_medium_or_high": 2.553432948742198
+    },
+    "R91": {
+      "n_policies": 35799,
+      "mean_pure_premium": 204.03459852042815,
+      "pct_medium_or_high": 2.5922511802005643
+    },
+    "R93": {
+      "n_policies": 79315,
+      "mean_pure_premium": 279.85197950888414,
+      "pct_medium_or_high": 3.4709701821849586
+    },
+    "R94": {
+      "n_policies": 4516,
+      "mean_pure_premium": 261.75326934960276,
+      "pct_medium_or_high": 2.4136403897254204
+    }
+  }
+}

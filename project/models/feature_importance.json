@@ -1,0 +1,206 @@
+[
+  {
+    "feature": "num__Exposure",
+    "importance": 0.16828630143245069
+  },
+  {
+    "feature": "num__BonusMalus",
+    "importance": 0.058843733150990486
+  },
+  {
+    "feature": "num__Density",
+    "importance": 0.009489535981478244
+  },
+  {
+    "feature": "num__DrivAge",
+    "importance": 0.00885358187877013
+  },
+  {
+    "feature": "num__VehAge",
+    "importance": 0.0052182378049738425
+  },
+  {
+    "feature": "num__VehicleRiskIndex",
+    "importance": 0.0038878623223324027
+  },
+  {
+    "feature": "cat__VehBrand_B12",
+    "importance": 0.002716455986047898
+  },
+  {
+    "feature": "cat__Region_R82",
+    "importance": 0.002605595343049716
+  },
+  {
+    "feature": "num__VehPower",
+    "importance": 0.0015010225646665172
+  },
+  {
+    "feature": "cat__Region_R91",
+    "importance": 0.0012741994657460658
+  },
+  {
+    "feature": "cat__VehBrand_B5",
+    "importance": 0.00042196436867854753
+  },
+  {
+    "feature": "cat__Area_C",
+    "importance": 0.0003034034104613115
+  },
+  {
+    "feature": "cat__VehBrand_B13",
+    "importance": 0.00022847056218929426
+  },
+  {
+    "feature": "cat__Region_R83",
+    "importance": 0.00021050511419088794
+  },
+  {
+    "feature": "cat__Region_R74",
+    "importance": 0.0001830798587174239
+  },
+  {
+    "feature": "cat__Region_R11",
+    "importance": 0.00017048333914559954
+  },
+  {
+    "feature": "cat__VehBrand_B14",
+    "importance": 0.0001664090789087099
+  },
+  {
+    "feature": "cat__Region_R31",
+    "importance": 0.00016032286329640635
+  },
+  {
+    "feature": "cat__Region_R94",
+    "importance": 0.00015177646461724445
+  },
+  {
+    "feature": "cat__VehBrand_B3",
+    "importance": 0.00015091217095863918
+  },
+  {
+    "feature": "cat__Region_R93",
+    "importance": 9.518232466273109e-05
+  },
+  {
+    "feature": "cat__VehBrand_B11",
+    "importance": 5.837097335015251e-05
+  },
+  {
+    "feature": "cat__Area_D",
+    "importance": 3.628330331987654e-05
+  },
+  {
+    "feature": "cat__Region_R23",
+    "importance": 2.397300785742888e-05
+  },
+  {
+    "feature": "cat__Region_R52",
+    "importance": 1.75057975671337e-05
+  },
+  {
+    "feature": "cat__Area_E",
+    "importance": 9.71264877754526e-06
+  },
+  {
+    "feature": "cat__VehGas_Diesel",
+    "importance": 9.177887756450787e-06
+  },
+  {
+    "feature": "cat__Region_R22",
+    "importance": 7.254098865594472e-06
+  },
+  {
+    "feature": "cat__Region_R72",
+    "importance": 4.325126633804762e-06
+  },
+  {
+    "feature": "cat__Region_R43",
+    "importance": 2.5830218898607407e-06
+  },
+  {
+    "feature": "num__RiskLoadIndex",
+    "importance": 0.0
+  },
+  {
+    "feature": "num__DriverExperienceProxy",
+    "importance": 0.0
+  },
+  {
+    "feature": "num__UrbanicityIndex",
+    "importance": 0.0
+  },
+  {
+    "feature": "cat__Area_A",
+    "importance": 0.0
+  },
+  {
+    "feature": "cat__Region_R21",
+    "importance": -1.5492567594366236e-06
+  },
+  {
+    "feature": "cat__VehBrand_B1",
+    "importance": -5.528387963897134e-06
+  },
+  {
+    "feature": "cat__Area_B",
+    "importance": -1.1150671075155216e-05
+  },
+  {
+    "feature": "cat__Region_R54",
+    "importance": -1.23018809804476e-05
+  },
+  {
+    "feature": "cat__Area_F",
+    "importance": -1.3854003503140552e-05
+  },
+  {
+    "feature": "cat__Region_R42",
+    "importance": -1.632596380340967e-05
+  },
+  {
+    "feature": "cat__Region_R53",
+    "importance": -2.2167763638873222e-05
+  },
+  {
+    "feature": "cat__VehBrand_B4",
+    "importance": -3.071213180764568e-05
+  },
+  {
+    "feature": "cat__VehBrand_B10",
+    "importance": -3.35256205913718e-05
+  },
+  {
+    "feature": "cat__Region_R41",
+    "importance": -3.445087420531993e-05
+  },
+  {
+    "feature": "cat__VehBrand_B2",
+    "importance": -4.80793010534016e-05
+  },
+  {
+    "feature": "cat__Region_R24",
+    "importance": -5.7434010557577686e-05
+  },
+  {
+    "feature": "cat__VehBrand_B6",
+    "importance": -6.233046310122337e-05
+  },
+  {
+    "feature": "cat__Region_R25",
+    "importance": -7.033667903163139e-05
+  },
+  {
+    "feature": "cat__Region_R26",
+    "importance": -9.950820879078837e-05
+  },
+  {
+    "feature": "cat__Region_R73",
+    "importance": -0.0004200682332672345
+  },
+  {
+    "feature": "cat__VehGas_Regular",
+    "importance": -0.00045383662702114247
+  }
+]

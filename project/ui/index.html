@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Risk Ledger — Bivariate Claim Scoring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-950:#12161d;
+    --ink-900:#1a2029;
+    --ink-850:#202836;
+    --ink-800:#2a3340;
+    --hairline:#3a4453;
+    --parchment:#ece7d8;
+    --parchment-dim:#c9c4b3;
+    --muted:#8b93a3;
+    --stamp-red:#c1493c;
+    --stamp-red-dim:#3a2320;
+    --stamp-teal:#5a9a89;
+    --stamp-teal-dim:#1e2f2b;
+    --stamp-amber:#cf9a4c;
+    --stamp-amber-dim:#382c1a;
+    --serif:'Source Serif 4', Georgia, serif;
+    --mono:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink-950);
+    color:var(--parchment);
+    font-family:var(--serif);
+    line-height:1.5;
+    min-height:100vh;
+  }
+  ::selection{background:var(--stamp-amber); color:var(--ink-950);}
+
+  a{color:inherit;}
+
+  .page{
+    max-width:1180px;
+    margin:0 auto;
+    padding:40px 28px 80px;
+  }
+
+  header.masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    border-bottom:1px solid var(--hairline);
+    padding-bottom:22px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+  }
+  .masthead h1{
+    font-size:clamp(28px,4vw,40px);
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .masthead p{
+    margin:0;
+    color:var(--muted);
+    font-size:15px;
+    max-width:52ch;
+  }
+  .conn{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:flex-end;
+  }
+  .conn label{color:var(--parchment-dim);}
+  .conn-row{display:flex; align-items:center; gap:8px;}
+  .conn input{
+    background:var(--ink-900);
+    border:1px solid var(--hairline);
+    color:var(--parchment);
+    font-family:var(--mono);
+    font-size:12px;
+    padding:6px 9px;
+    border-radius:3px;
+    width:220px;
+  }
+  .conn input:focus{outline:1px solid var(--stamp-amber); border-color:var(--stamp-amber);}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0;}
+  .dot.ok{background:var(--stamp-teal); box-shadow:0 0 6px var(--stamp-teal);}
+  .dot.bad{background:var(--stamp-red); box-shadow:0 0 6px var(--stamp-red);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:minmax(300px,380px) 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:860px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--ink-900);
+    border:1px solid var(--hairline);
+    border-radius:6px;
+  }
+  .panel-head{
+    padding:16px 20px 14px;
+    border-bottom:1px solid var(--hairline);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .panel-head h2{
+    font-size:14px;
+    font-family:var(--mono);
+    font-weight:600;
+    letter-spacing:0.02em;
+    margin:0;
+    color:var(--parchment);
+  }
+  .panel-head span{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+  }
+  .panel-body{padding:18px 20px 20px;}
+
+  .field{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 12px;
+    align-items:center;
+    padding:9px 0;
+    border-bottom:1px solid var(--ink-850);
+  }
+  .field:last-of-type{border-bottom:none;}
+  .field label{
+    font-size:13.5px;
+    color:var(--parchment-dim);
+  }
+  .field .hint{
+    display:block;
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--ink-850);
+    border:1px solid var(--hairline);
+    color:var(--parchment);
+    font-family:var(--mono);
+    font-size:13px;
+    padding:7px 9px;
+    border-radius:3px;
+  }
+  .field input:focus, .field select:focus{
+    outline:none;
+    border-color:var(--stamp-amber);
+  }
+
+  button.assess{
+    width:100%;
+    margin-top:16px;
+    padding:12px 16px;
+    background:var(--stamp-amber);
+    color:var(--ink-950);
+    border:none;
+    border-radius:3px;
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  button.assess:hover{background:#e0ab5e;}
+  button.assess:active{transform:scale(0.99);}
+  button.assess:disabled{background:var(--ink-800); color:var(--muted); cursor:default;}
+
+  button.secondary{
+    background:transparent;
+    color:var(--parchment);
+    border:1px solid var(--hairline);
+    border-radius:3px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:9px 14px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  button.secondary:hover{border-color:var(--stamp-amber); color:var(--stamp-amber);}
+
+  /* --- Result panel --- */
+  .result-top{
+    display:flex;
+    gap:24px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .stamp{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    border:3px solid currentColor;
+    border-radius:4px;
+    padding:10px 18px;
+    transform:rotate(-4deg);
+    display:inline-block;
+    flex-shrink:0;
+  }
+  .stamp.low{color:var(--stamp-teal); background:var(--stamp-teal-dim);}
+  .stamp.medium{color:var(--stamp-amber); background:var(--stamp-amber-dim);}
+  .stamp.high{color:var(--stamp-red); background:var(--stamp-red-dim);}
+
+  .score-block{flex:1; min-width:200px;}
+  .score-block .num{
+    font-family:var(--mono);
+    font-size:34px;
+    font-weight:600;
+    line-height:1;
+  }
+  .score-block .label{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    margin-top:4px;
+  }
+  .review-flag{
+    font-family:var(--mono);
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:3px;
+    border:1px solid var(--hairline);
+    white-space:nowrap;
+  }
+  .review-flag.yes{color:var(--stamp-red); border-color:var(--stamp-red);}
+  .review-flag.no{color:var(--stamp-teal); border-color:var(--stamp-teal);}
+
+  .compare{margin-top:26px;}
+  .compare h3{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.02em;
+    margin:0 0 12px;
+    font-weight:500;
+  }
+  .model-row{margin-bottom:16px;}
+  .model-row .model-name{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--parchment-dim);
+    margin-bottom:6px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .bar-row{
+    display:grid;
+    grid-template-columns:60px 1fr 46px;
+    align-items:center;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .bar-row .tier-label{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .bar-track{
+    height:8px;
+    background:var(--ink-850);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .bar-fill{height:100%; border-radius:2px;}
+  .bar-fill.low{background:var(--stamp-teal);}
+  .bar-fill.medium{background:var(--stamp-amber);}
+  .bar-fill.high{background:var(--stamp-red);}
+  .bar-row .pct{font-family:var(--mono); font-size:11px; color:var(--parchment-dim); text-align:right;}
+
+  .notes{
+    margin-top:20px;
+    padding-top:16px;
+    border-top:1px solid var(--hairline);
+    font-size:13.5px;
+    color:var(--parchment-dim);
+    line-height:1.6;
+  }
+
+  /* --- Explain section --- */
+  .explain-section{
+    margin-top:0;
+    padding-top:16px;
+    border-top:1px solid var(--hairline);
+  }
+  .explain-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:10px;
+  }
+  .explain-head h3{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.02em;
+    margin:0;
+    font-weight:500;
+  }
+  .ollama-status{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+  }
+  .ollama-status.ok{color:var(--stamp-teal);}
+  .ollama-status.bad{color:var(--stamp-red);}
+  .explain-controls{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .explain-controls select{
+    background:var(--ink-850);
+    border:1px solid var(--hairline);
+    color:var(--parchment);
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:8px 10px;
+    border-radius:3px;
+    flex:1;
+    min-width:140px;
+  }
+  #explainOutput{margin-top:16px;}
+  .explain-summary{
+    font-size:14px;
+    color:var(--parchment);
+    line-height:1.65;
+    margin-bottom:18px;
+  }
+  .factor-list{display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
+  .factor-card{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:4px 12px;
+    padding:10px 12px;
+    background:var(--ink-850);
+    border-left:3px solid var(--hairline);
+    border-radius:3px;
+  }
+  .factor-card.increases_risk{border-left-color:var(--stamp-red);}
+  .factor-card.decreases_risk{border-left-color:var(--stamp-teal);}
+  .factor-card.neutral{border-left-color:var(--muted);}
+  .factor-card .factor-name{
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:600;
+    color:var(--parchment);
+    grid-column:1;
+  }
+  .factor-card .factor-value{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    grid-column:2;
+    text-align:right;
+  }
+  .factor-card .factor-explanation{
+    grid-column:1/-1;
+    font-size:13px;
+    color:var(--parchment-dim);
+    line-height:1.5;
+  }
+  .actions-list{
+    margin:0 0 16px;
+    padding:0;
+    list-style:none;
+  }
+  .actions-list li{
+    font-size:13.5px;
+    color:var(--parchment);
+    padding:7px 0 7px 20px;
+    position:relative;
+    border-bottom:1px solid var(--ink-850);
+  }
+  .actions-list li:last-child{border-bottom:none;}
+  .actions-list li::before{
+    content:'→';
+    position:absolute;
+    left:0;
+    color:var(--stamp-amber);
+    font-family:var(--mono);
+  }
+  .confidence-note{
+    font-size:12px;
+    color:var(--muted);
+    font-style:italic;
+    line-height:1.5;
+  }
+  .explain-error{
+    font-family:var(--mono);
+    font-size:12px;
+    color:#e8b3ac;
+    background:var(--stamp-red-dim);
+    border:1px solid var(--stamp-red);
+    padding:12px 14px;
+    border-radius:4px;
+  }
+
+  .empty-state{
+    color:var(--muted);
+    font-size:14px;
+    padding:30px 4px;
+  }
+
+  .error-box{
+    background:var(--stamp-red-dim);
+    border:1px solid var(--stamp-red);
+    color:#e8b3ac;
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:12px 14px;
+    border-radius:4px;
+    margin-top:14px;
+  }
+
+  /* --- Anomaly panel --- */
+  .anomaly-body{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .anomaly-body .field{grid-column:span 2;}
+  .anomaly-result{
+    margin-top:14px;
+    font-family:var(--mono);
+    font-size:13px;
+    padding:12px 14px;
+    border-radius:4px;
+    border:1px solid var(--hairline);
+    display:none;
+  }
+  .anomaly-result.show{display:block;}
+  .anomaly-result.outlier{border-color:var(--stamp-red); background:var(--stamp-red-dim); color:#e8b3ac;}
+  .anomaly-result.normal{border-color:var(--stamp-teal); background:var(--stamp-teal-dim); color:#bfe0d4;}
+  .anomaly-result .d2{font-size:20px; font-weight:600; display:block; margin-bottom:4px;}
+
+  footer{
+    margin-top:40px;
+    padding-top:18px;
+    border-top:1px solid var(--hairline);
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div>
+      <h1>Risk Ledger</h1>
+      <p>Bivariate frequency/severity assessment for motor third-party liability policies — QDA and gradient-boosted scoring over a fitted (log-frequency, log-severity) claim model.</p>
+    </div>
+    <div class="conn">
+      <label for="apiBase">API endpoint</label>
+      <div class="conn-row">
+        <span class="dot" id="connDot"></span>
+        <input id="apiBase" type="text" value="http://localhost:8000" spellcheck="false" />
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- LEFT: worksheet -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>POLICY WORKSHEET</h2>
+        <span>/score</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="VehPower">Vehicle power<span class="hint">ordinal, 1–15</span></label>
+          <input id="VehPower" type="number" min="1" max="15" value="7" />
+        </div>
+        <div class="field">
+          <label for="VehAge">Vehicle age<span class="hint">years, 0–50</span></label>
+          <input id="VehAge" type="number" min="0" max="50" value="3" />
+        </div>
+        <div class="field">
+          <label for="DrivAge">Driver age<span class="hint">years, 18–100</span></label>
+          <input id="DrivAge" type="number" min="18" max="100" value="34" />
+        </div>
+        <div class="field">
+          <label for="BonusMalus">Bonus-malus<span class="hint">100 = neutral</span></label>
+          <input id="BonusMalus" type="number" min="50" max="350" value="90" />
+        </div>
+        <div class="field">
+          <label for="Density">Density<span class="hint">inhabitants / km²</span></label>
+          <input id="Density" type="number" min="1" value="4500" />
+        </div>
+        <div class="field">
+          <label for="Exposure">Exposure<span class="hint">fraction of year</span></label>
+          <input id="Exposure" type="number" step="0.01" min="0.01" max="1" value="1.0" />
+        </div>
+        <div class="field">
+          <label for="Area">Area code<span class="hint">A – F</span></label>
+          <select id="Area">
+            <option>A</option><option>B</option><option>C</option>
+            <option selected>D</option><option>E</option><option>F</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="VehBrand">Vehicle brand<span class="hint">e.g. B12</span></label>
+          <input id="VehBrand" type="text" value="B12" />
+        </div>
+        <div class="field">
+          <label for="VehGas">Fuel<span class="hint">Diesel / Regular</span></label>
+          <select id="VehGas">
+            <option>Regular</option><option>Diesel</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="Region">Region code<span class="hint">e.g. R82</span></label>
+          <input id="Region" type="text" value="R82" />
+        </div>
+
+        <button class="assess" id="assessBtn">Assess policy</button>
+        <div id="scoreError"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: results -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>ASSESSMENT</h2>
+        <span id="resultMeta">awaiting input</span>
+      </div>
+      <div class="panel-body" id="resultBody">
+        <div class="empty-state">Fill in the worksheet and click "Assess policy" to score it against the QDA and gradient-boosting models.</div>
+      </div>
+      <div class="explain-section" id="explainSection">
+        <div class="explain-head">
+          <h3>EXPLAIN THIS SCORE</h3>
+          <span id="ollamaStatus" class="ollama-status">checking Ollama…</span>
+        </div>
+        <div class="explain-controls">
+          <select id="ollamaModel"></select>
+          <button class="secondary" id="explainBtn" disabled>Explain with Ollama</button>
+        </div>
+        <div id="explainOutput"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ANOMALY CHECK, full width below -->
+  <div class="panel" style="margin-top:28px;">
+    <div class="panel-head">
+      <h2>CLAIM ANOMALY CHECK</h2>
+      <span>/claim-anomaly</span>
+    </div>
+    <div class="panel-body">
+      <div class="anomaly-body">
+        <div class="field" style="grid-column:span 1;">
+          <label for="annFreq">Annual frequency<span class="hint">claims ÷ exposure so far</span></label>
+          <input id="annFreq" type="number" step="0.01" min="0.01" value="2.5" />
+        </div>
+        <div class="field" style="grid-column:span 1;">
+          <label for="sev">Severity (EUR)<span class="hint">average claim amount so far</span></label>
+          <input id="sev" type="number" step="1" min="1" value="45000" />
+        </div>
+      </div>
+      <button class="secondary" id="anomalyBtn">Check claim</button>
+      <div class="anomaly-result" id="anomalyResult"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Risk Ledger — companion dashboard for the freMTPL2 bivariate scoring API</span>
+    <span id="pingInfo">not connected</span>
+  </footer>
+
+</div>
+
+<script>
+const apiBaseInput = document.getElementById('apiBase');
+const connDot = document.getElementById('connDot');
+const pingInfo = document.getElementById('pingInfo');
+
+// If opened via run_all.py with ?api=http://host:port, use that instead
+// of the hardcoded default - lets a non-default --port flow straight
+// through without manual editing.
+const urlParams = new URLSearchParams(window.location.search);
+const apiParam = urlParams.get('api');
+if (apiParam) {
+  apiBaseInput.value = apiParam;
+}
+
+function apiBase(){
+  return apiBaseInput.value.trim().replace(/\/$/, '');
+}
+
+async function pingHealth(){
+  try{
+    const res = await fetch(apiBase() + '/health', { method:'GET' });
+    if(res.ok){
+      connDot.className = 'dot ok';
+      pingInfo.textContent = 'connected — ' + apiBase();
+    } else {
+      throw new Error('bad status');
+    }
+  } catch(e){
+    connDot.className = 'dot bad';
+    pingInfo.textContent = 'not reachable — start the API and check the endpoint above';
+  }
+}
+pingHealth();
+apiBaseInput.addEventListener('change', pingHealth);
+
+// ---- Ollama model discovery ----
+let lastPolicyPayload = null;
+const ollamaStatus = document.getElementById('ollamaStatus');
+const ollamaModelSelect = document.getElementById('ollamaModel');
+const explainBtn = document.getElementById('explainBtn');
+
+async function refreshOllamaModels(){
+  try{
+    const res = await fetch(apiBase() + '/ollama/models');
+    if(!res.ok) throw new Error('unreachable');
+    const data = await res.json();
+    ollamaModelSelect.innerHTML = '';
+    if(!data.models || data.models.length === 0){
+      ollamaStatus.textContent = 'no models pulled';
+      ollamaStatus.className = 'ollama-status bad';
+      const opt = document.createElement('option');
+      opt.textContent = data.default || 'llama3.2';
+      opt.value = data.default || 'llama3.2';
+      ollamaModelSelect.appendChild(opt);
+      explainBtn.disabled = true;
+      return;
+    }
+    data.models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      if(m === data.default) opt.selected = true;
+      ollamaModelSelect.appendChild(opt);
+    });
+    ollamaStatus.textContent = `${data.models.length} model(s) available`;
+    ollamaStatus.className = 'ollama-status ok';
+    explainBtn.disabled = !lastPolicyPayload;
+  } catch(e){
+    ollamaStatus.textContent = 'Ollama not reachable';
+    ollamaStatus.className = 'ollama-status bad';
+    explainBtn.disabled = true;
+  }
+}
+refreshOllamaModels();
+apiBaseInput.addEventListener('change', refreshOllamaModels);
+
+function tierClass(tier){
+  return (tier || '').toLowerCase();
+}
+
+function renderBars(containerHtml, probs, tiers){
+  let html = '';
+  tiers.forEach(t => {
+    const pct = (probs[t] || 0) * 100;
+    html += `
+      <div class="bar-row">
+        <span class="tier-label">${t}</span>
+        <div class="bar-track"><div class="bar-fill ${tierClass(t)}" style="width:${pct.toFixed(1)}%"></div></div>
+        <span class="pct">${pct.toFixed(1)}%</span>
+      </div>`;
+  });
+  return html;
+}
+
+document.getElementById('assessBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('assessBtn');
+  const errBox = document.getElementById('scoreError');
+  const resultBody = document.getElementById('resultBody');
+  const resultMeta = document.getElementById('resultMeta');
+  errBox.innerHTML = '';
+
+  const payload = {
+    VehPower: Number(document.getElementById('VehPower').value),
+    VehAge: Number(document.getElementById('VehAge').value),
+    DrivAge: Number(document.getElementById('DrivAge').value),
+    BonusMalus: Number(document.getElementById('BonusMalus').value),
+    Density: Number(document.getElementById('Density').value),
+    Exposure: Number(document.getElementById('Exposure').value),
+    Area: document.getElementById('Area').value,
+    VehBrand: document.getElementById('VehBrand').value,
+    VehGas: document.getElementById('VehGas').value,
+    Region: document.getElementById('Region').value,
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Scoring…';
+
+  try{
+    const res = await fetch(apiBase() + '/score', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if(!res.ok){
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText}`);
+    }
+    const data = await res.json();
+    connDot.className = 'dot ok';
+    lastPolicyPayload = payload;
+    explainBtn.disabled = ollamaStatus.classList.contains('bad');
+    document.getElementById('explainOutput').innerHTML = '';
+
+    const tiers = ['Low','Medium','High'];
+    const flagged = data.flag_for_review;
+    const stampTier = tierClass(data.risk_tier_qda);
+
+    resultMeta.textContent = flagged ? 'flagged for review' : 'clear';
+
+    resultBody.innerHTML = `
+      <div class="result-top">
+        <div class="stamp ${tierClass(data.risk_tier_qda)}">${data.risk_tier_qda}</div>
+        <div class="score-block">
+          <div class="num">${(data.combined_high_risk_score*100).toFixed(1)}%</div>
+          <div class="label">combined medium+high risk score</div>
+        </div>
+        <div class="review-flag ${flagged ? 'yes' : 'no'}">${flagged ? 'flag for review' : 'no review needed'}</div>
+      </div>
+
+      <div class="compare">
+        <h3>QDA — mvn classifier · predicted ${data.risk_tier_qda}</h3>
+        ${renderBars('', data.probabilities_qda, tiers)}
+      </div>
+      <div class="compare">
+        <h3>Gradient boosting · predicted ${data.risk_tier_gbm}</h3>
+        ${renderBars('', data.probabilities_gbm, tiers)}
+      </div>
+
+      <div class="notes">${data.notes}</div>
+    `;
+  } catch(e){
+    connDot.className = 'dot bad';
+    errBox.innerHTML = `<div class="error-box">Could not reach the API at <strong>${apiBase()}</strong>.<br/>${e.message}<br/><br/>Make sure <code>uvicorn api.main:app --host 0.0.0.0 --port 8000</code> is running, and that CORS is enabled (this file needs the updated api/main.py).</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Assess policy';
+  }
+});
+
+document.getElementById('anomalyBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('anomalyBtn');
+  const box = document.getElementById('anomalyResult');
+  const payload = {
+    annual_frequency: Number(document.getElementById('annFreq').value),
+    severity: Number(document.getElementById('sev').value),
+  };
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  try{
+    const res = await fetch(apiBase() + '/claim-anomaly', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if(!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    box.className = 'anomaly-result show ' + (data.is_statistical_outlier ? 'outlier' : 'normal');
+    box.innerHTML = `
+      <span class="d2">D² = ${data.mahalanobis_distance_sq.toFixed(2)} &nbsp;(99% χ² threshold = ${data.chi2_threshold_99pct.toFixed(2)})</span>
+      ${data.interpretation}
+    `;
+  } catch(e){
+    box.className = 'anomaly-result show outlier';
+    box.innerHTML = `Could not reach the API: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Check claim';
+  }
+});
+
+function directionLabel(dir){
+  return { increases_risk: 'increases risk', decreases_risk: 'decreases risk', neutral: 'neutral' }[dir] || dir;
+}
+
+explainBtn.addEventListener('click', async () => {
+  const out = document.getElementById('explainOutput');
+  if(!lastPolicyPayload){
+    out.innerHTML = `<div class="explain-error">Assess a policy first.</div>`;
+    return;
+  }
+  const model = ollamaModelSelect.value;
+  explainBtn.disabled = true;
+  explainBtn.textContent = 'Asking Ollama…';
+  out.innerHTML = `<div class="empty-state" style="padding:10px 0;">Generating explanation with ${model}…</div>`;
+  try{
+    const res = await fetch(apiBase() + '/explain?model=' + encodeURIComponent(model), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(lastPolicyPayload),
+    });
+    if(!res.ok){
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText}`);
+    }
+    const data = await res.json();
+
+    let factorsHtml = '';
+    (data.key_factors || []).forEach(kf => {
+      factorsHtml += `
+        <div class="factor-card ${kf.direction}">
+          <span class="factor-name">${kf.feature}</span>
+          <span class="factor-value">${kf.policy_value} · ${directionLabel(kf.direction)}</span>
+          <span class="factor-explanation">${kf.explanation}</span>
+        </div>`;
+    });
+
+    let actionsHtml = '';
+    (data.recommended_actions || []).forEach(a => {
+      actionsHtml += `<li>${a}</li>`;
+    });
+
+    out.innerHTML = `
+      <div class="explain-summary">${data.summary}</div>
+      <div class="factor-list">${factorsHtml}</div>
+      <ul class="actions-list">${actionsHtml}</ul>
+      <div class="confidence-note">${data.confidence_note}</div>
+    `;
+  } catch(e){
+    out.innerHTML = `<div class="explain-error">Could not get an explanation: ${e.message}</div>`;
+  } finally {
+    explainBtn.disabled = false;
+    explainBtn.textContent = 'Explain with Ollama';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{
+  "numeric_features": [
+    "VehPower",
+    "VehAge",
+    "DrivAge",
+    "BonusMalus",
+    "Density",
+    "Exposure",
+    "RiskLoadIndex",
+    "VehicleRiskIndex",
+    "DriverExperienceProxy",
+    "UrbanicityIndex"
+  ],
+  "raw_numeric_inputs": [
+    "VehPower",
+    "VehAge",
+    "DrivAge",
+    "BonusMalus",
+    "Density",
+    "Exposure"
+  ],
+  "categorical_features": [
+    "Area",
+    "VehBrand",
+    "VehGas",
+    "Region"
+  ],
+  "categorical_levels": {
+    "Area": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ],
+    "VehBrand": [
+      "B1",
+      "B10",
+      "B11",
+      "B12",
+      "B13",
+      "B14",
+      "B2",
+      "B3",
+      "B4",
+      "B5",
+      "B6"
+    ],
+    "VehGas": [
+      "Diesel",
+      "Regular"
+    ],
+    "Region": [
+      "R11",
+      "R21",
+      "R22",
+      "R23",
+      "R24",
+      "R25",
+      "R26",
+      "R31",
+      "R41",
+      "R42",
+      "R43",
+      "R52",
+      "R53",
+      "R54",
+      "R72",
+      "R73",
+      "R74",
+      "R82",
+      "R83",
+      "R91",
+      "R93",
+      "R94"
+    ]
+  },
+  "risk_tiers": [
+    "High",
+    "Low",
+    "Medium"
+  ]
+}
