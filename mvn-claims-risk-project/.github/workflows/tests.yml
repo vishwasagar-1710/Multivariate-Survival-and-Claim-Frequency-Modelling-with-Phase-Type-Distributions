@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run statistical/model test suite
+        run: python tests/test_pipeline.py
+
+      - name: Smoke-test the scoring API (stdlib demo server)
+        run: |
+          python app/demo_server.py 8000 &
+          sleep 2
+          curl -sf http://localhost:8000/health
+          curl -sf -X POST http://localhost:8000/score \
+            -H "Content-Type: application/json" \
+            -d '{"Area":"C","VehPower":7,"VehAge":4,"DrivAge":28,"BonusMalus":95,"Density":3200,"Region":"Rhone-Alpes","VehGas":"Diesel","VehBrand":"B4","Exposure":0.85}'

@@ -20,12 +20,17 @@ Then:  curl -X POST http://localhost:8000/score -H "Content-Type: application/js
 from __future__ import annotations
 
 import json
+import mimetypes
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 from app.scoring import score_policy  # noqa: E402
+
+FRONTEND_INDEX = ROOT / "frontend" / "index.html"
+OUTPUTS_DIR = ROOT / "outputs"
 
 REQUIRED_FIELDS = [
     "Area", "VehPower", "VehAge", "DrivAge", "BonusMalus",
@@ -42,20 +47,67 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_file(self, path: Path, content_type: str | None = None, status: int = 200):
+        body = path.read_bytes()
+        ctype = content_type or mimetypes.guess_type(str(path))[0] or "application/octet-stream"
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def log_message(self, fmt, *args):  # quieter logs
         sys.stderr.write("[demo_server] " + (fmt % args) + "\n")
 
+    def do_HEAD(self):
+        # Mirrors do_GET's routing but without a body, for spec-correct
+        # HEAD support (the frontend also HEADs /outputs/*.png to probe
+        # plot availability before rendering the evidence gallery).
+        if self.path in ("/", "/index.html") and FRONTEND_INDEX.exists():
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            return
+        if self.path in ("/health", "/api"):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            return
+        if self.path.startswith("/outputs/"):
+            rel = self.path[len("/outputs/"):]
+            target = (OUTPUTS_DIR / rel).resolve()
+            if OUTPUTS_DIR.resolve() in target.parents and target.exists():
+                self.send_response(200)
+                self.send_header("Content-Type", mimetypes.guess_type(str(target))[0] or "application/octet-stream")
+                self.end_headers()
+                return
+        self.send_response(404)
+        self.end_headers()
+
     def do_GET(self):
+        if self.path == "/" or self.path == "/index.html":
+            if FRONTEND_INDEX.exists():
+                return self._send_file(FRONTEND_INDEX, "text/html; charset=utf-8")
+            return self._send_json({"status": "ok", "note": "frontend/index.html not found"})
+
         if self.path == "/health":
-            self._send_json({"status": "ok"})
-        elif self.path == "/":
-            self._send_json({
+            return self._send_json({"status": "ok"})
+
+        if self.path == "/api":
+            return self._send_json({
                 "service": "Bivariate Survival & Claim Frequency Risk Scoring API (stdlib demo)",
                 "endpoints": ["/health", "/score (POST)", "/score/batch (POST)"],
                 "note": "Equivalent to app/main.py (FastAPI); see README for the production server.",
             })
-        else:
-            self._send_json({"error": "not found"}, status=404)
+
+        if self.path.startswith("/outputs/"):
+            rel = self.path[len("/outputs/"):]
+            target = (OUTPUTS_DIR / rel).resolve()
+            if OUTPUTS_DIR.resolve() in target.parents and target.exists() and target.is_file():
+                return self._send_file(target)
+            return self._send_json({"error": "not found"}, status=404)
+
+        return self._send_json({"error": "not found"}, status=404)
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))

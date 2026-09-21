@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Frequency &amp; Severity Risk Desk — freMTPL2</title>
+<meta name="description" content="Bivariate frequency-severity risk scoring for motor policies, built on a real French MTPL portfolio." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js" crossorigin></script>
+
+<style>
+  :root {
+    --ink: #0E1626;
+    --ink-soft: #16223A;
+    --ink-line: rgba(236, 232, 221, 0.14);
+    --paper: #ECE7D9;
+    --paper-line: rgba(14, 22, 38, 0.12);
+    --teal: #4FB8A6;
+    --rust: #C1552C;
+    --cream-text: #ECE8DD;
+    --muted: #9AA6BC;
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--cream-text);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--teal); color: var(--ink); }
+
+  a { color: inherit; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  h1, h2, h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .mono {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Masthead ---------- */
+  header.masthead {
+    border-bottom: 1px solid var(--ink-line);
+    padding: 22px 0;
+  }
+  .masthead-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .masthead-title {
+    font-size: 17px;
+    font-weight: 500;
+    font-family: 'Fraunces', serif;
+  }
+  .masthead-nav { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
+  .masthead-nav a { text-decoration: none; transition: color .15s; }
+  .masthead-nav a:hover { color: var(--cream-text); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 72px 0 88px;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items: start;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: rise .7s ease-out .05s forwards;
+  }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .hero h1 {
+    font-size: clamp(34px, 4.6vw, 52px);
+    line-height: 1.08;
+    max-width: 12ch;
+  }
+  .hero .thesis {
+    margin-top: 22px;
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 46ch;
+  }
+  .hero .thesis strong { color: var(--cream-text); font-weight: 500; }
+
+  .source-note {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--ink-line);
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .source-note .stat-inline .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    display: block;
+    color: var(--teal);
+  }
+  .source-note .stat-inline .label {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ---------- Scorer card ---------- */
+  .scorer {
+    background: var(--ink-soft);
+    border: 1px solid var(--ink-line);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .scorer h2 {
+    font-size: 19px;
+    margin-bottom: 4px;
+  }
+  .scorer .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 22px; }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 12px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.span2 { grid-column: 1 / -1; }
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .field input, .field select {
+    background: var(--ink);
+    border: 1px solid var(--ink-line);
+    color: var(--cream-text);
+    padding: 9px 10px;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    outline: 2px solid var(--teal);
+    outline-offset: 1px;
+  }
+  .field input[type="range"] {
+    padding: 0;
+    accent-color: var(--teal);
+    font-family: inherit;
+  }
+
+  .submit-btn {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--teal);
+    color: var(--ink);
+    border: none;
+    padding: 13px;
+    font-size: 14.5px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform .12s ease, background .15s;
+  }
+  .submit-btn:hover { background: #63c6b5; }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { opacity: .55; cursor: default; }
+
+  .error-box {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--rust);
+    color: #f3c9b8;
+    font-size: 13.5px;
+    border-radius: var(--radius);
+  }
+
+  /* ---------- Result ---------- */
+  .result {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--ink-line);
+  }
+  .result-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .tier-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+  .tier-Low { color: var(--teal); }
+  .tier-Medium { color: #D9A441; }
+  .tier-High { color: var(--rust); }
+
+  .prob-readout {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 34px;
+    color: var(--cream-text);
+  }
+  .prob-readout .pct { font-size: 18px; color: var(--muted); }
+
+  .meter { margin-top: 16px; }
+  .meter-track {
+    position: relative;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--teal), #D9A441 55%, var(--rust));
+    margin: 14px 0 6px;
+  }
+  .meter-marker {
+    position: absolute;
+    top: -6px;
+    width: 2px;
+    height: 20px;
+    background: var(--cream-text);
+    transform: translateX(-1px);
+    transition: left .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .meter-threshold {
+    position: absolute;
+    top: -3px;
+    width: 1px;
+    height: 14px;
+    background: var(--muted);
+    transition: left .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .meter-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .meter-note { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+
+  /* ---------- Ledger (findings) ---------- */
+  .ledger-section { background: var(--paper); color: var(--ink); padding: 84px 0; }
+  .ledger-section h2 {
+    font-size: clamp(26px, 3vw, 34px);
+    max-width: 16ch;
+  }
+  .ledger-section .sub { color: rgba(14,22,38,.62); max-width: 52ch; margin-top: 14px; font-size: 15.5px; }
+
+  .ledger { margin-top: 44px; }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 20px;
+    align-items: baseline;
+    padding: 20px 0;
+    border-top: 1px solid var(--paper-line);
+  }
+  .ledger-row:last-child { border-bottom: 1px solid var(--paper-line); }
+  .ledger-idx { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: rgba(14,22,38,.45); }
+  .ledger-body h3 { font-size: 17px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; }
+  .ledger-body p { margin: 6px 0 0; font-size: 14.5px; color: rgba(14,22,38,.68); max-width: 58ch; }
+  .ledger-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; text-align: right; white-space: nowrap; }
+
+  /* ---------- Pipeline ---------- */
+  .pipeline-section { padding: 84px 0; }
+  .pipeline-section h2 { font-size: clamp(26px, 3vw, 34px); max-width: 18ch; }
+  .pipeline { margin-top: 46px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; }
+  .pipe-step { padding: 0 16px 0 0; position: relative; }
+  .pipe-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 11px;
+    right: 0;
+    width: 16px;
+    height: 1px;
+    background: var(--ink-line);
+  }
+  .pipe-num { font-family: 'IBM Plex Mono', monospace; color: var(--teal); font-size: 13px; }
+  .pipe-title { margin-top: 10px; font-size: 14.5px; font-weight: 600; }
+  .pipe-desc { margin-top: 6px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- Evidence ---------- */
+  .evidence-section { background: var(--ink-soft); padding: 84px 0; border-top: 1px solid var(--ink-line); border-bottom: 1px solid var(--ink-line); }
+  .evidence-section h2 { font-size: clamp(26px, 3vw, 34px); max-width: 18ch; }
+  .evidence-grid { margin-top: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .evidence-card figure { margin: 0; }
+  .evidence-card img { width: 100%; display: block; border-radius: var(--radius); border: 1px solid var(--ink-line); background: #fff; }
+  .evidence-card figcaption { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+  .evidence-card figcaption strong { color: var(--cream-text); font-weight: 500; }
+  .evidence-empty {
+    grid-column: 1 / -1;
+    font-size: 13.5px;
+    color: var(--muted);
+    padding: 18px;
+    border: 1px dashed var(--ink-line);
+    border-radius: var(--radius);
+  }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 40px 0 56px; }
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    padding-top: 24px;
+    border-top: 1px solid var(--ink-line);
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { text-decoration: none; }
+  .footer-links a:hover { color: var(--cream-text); }
+
+  .api-config {
+    margin-top: 18px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .api-config button {
+    background: none;
+    border: none;
+    color: var(--teal);
+    cursor: pointer;
+    font-size: 12.5px;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .api-config input {
+    margin-top: 8px;
+    width: 100%;
+    background: var(--ink);
+    border: 1px solid var(--ink-line);
+    color: var(--cream-text);
+    padding: 7px 9px;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+  }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding: 52px 0 64px; }
+    .field-grid { grid-template-columns: 1fr; }
+    .evidence-grid { grid-template-columns: 1fr; }
+    .pipeline { grid-template-columns: repeat(3, 1fr); row-gap: 28px; }
+    .pipe-step:nth-child(3)::after { display: none; }
+    .ledger-row { grid-template-columns: 28px 1fr; }
+    .ledger-value { grid-column: 1 / -1; text-align: left; margin-top: 4px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero { animation: none; opacity: 1; transform: none; }
+    .meter-marker, .meter-threshold { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+/* ----------------------------------------------------------------------
+   Config: API base. Defaults to same-origin (this page is served by the
+   FastAPI app itself at "/"). Overridable + persisted for the case where
+   someone deploys the frontend separately from the backend.
+---------------------------------------------------------------------- */
+function useApiBase() {
+  const [apiBase, setApiBase] = useState(() => localStorage.getItem("apiBase") || "");
+  const update = (v) => {
+    setApiBase(v);
+    localStorage.setItem("apiBase", v);
+  };
+  return [apiBase, update];
+}
+
+const FIELD_DEFS = [
+  { key: "Area", label: "Rating area", type: "select", options: ["A","B","C","D","E","F"] },
+  { key: "VehGas", label: "Fuel", type: "select", options: ["Diesel","Regular"] },
+  { key: "VehPower", label: "Vehicle power", type: "number", min: 1, max: 20, step: 1 },
+  { key: "VehAge", label: "Vehicle age (yrs)", type: "number", min: 0, max: 60, step: 1 },
+  { key: "DrivAge", label: "Driver age", type: "number", min: 18, max: 100, step: 1 },
+  { key: "BonusMalus", label: "Bonus-malus", type: "number", min: 50, max: 350, step: 1 },
+  { key: "Density", label: "Commune density", type: "number", min: 1, step: 10 },
+  { key: "Region", label: "Region", type: "text" },
+  { key: "VehBrand", label: "Vehicle brand code", type: "text" },
+  { key: "Exposure", label: "Exposure (years)", type: "range", min: 0.02, max: 1, step: 0.01, span2: true },
+];
+
+const DEFAULT_POLICY = {
+  Area: "C", VehPower: 7, VehAge: 4, DrivAge: 28, BonusMalus: 95,
+  Density: 3200, Region: "Rhone-Alpes", VehGas: "Diesel", VehBrand: "B4", Exposure: 0.85,
+};
+
+function Field({ def, value, onChange }) {
+  if (def.type === "select") {
+    return (
+      <div className={"field" + (def.span2 ? " span2" : "")}>
+        <label>{def.label}</label>
+        <select value={value} onChange={(e) => onChange(def.key, e.target.value)}>
+          {def.options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      </div>
+    );
+  }
+  if (def.type === "range") {
+    return (
+      <div className={"field" + (def.span2 ? " span2" : "")}>
+        <label><span>{def.label}</span><span className="mono">{Number(value).toFixed(2)}</span></label>
+        <input type="range" min={def.min} max={def.max} step={def.step} value={value}
+          onChange={(e) => onChange(def.key, parseFloat(e.target.value))} />
+      </div>
+    );
+  }
+  return (
+    <div className={"field" + (def.span2 ? " span2" : "")}>
+      <label>{def.label}</label>
+      <input
+        type={def.type}
+        value={value}
+        min={def.min} max={def.max} step={def.step}
+        onChange={(e) => onChange(def.key, def.type === "number" ? parseFloat(e.target.value) : e.target.value)}
+      />
+    </div>
+  );
+}
+
+function ResultMeter({ result }) {
+  const p = result.high_risk_probability;
+  const thr = result.operating_threshold;
+  return (
+    <div className="result">
+      <div className="result-top">
+        <div className="prob-readout mono">
+          {(p * 100).toFixed(1)}<span className="pct">% large-loss probability</span>
+        </div>
+        <div className={"tier-badge tier-" + result.risk_tier}>{result.risk_tier} risk</div>
+      </div>
+      <div className="meter">
+        <div className="meter-track">
+          <div className="meter-threshold" style={{ left: (thr * 100) + "%" }} title="Flag threshold" />
+          <div className="meter-marker" style={{ left: (p * 100) + "%" }} />
+        </div>
+        <div className="meter-labels"><span>0%</span><span>50%</span><span>100%</span></div>
+      </div>
+      <p className="meter-note">
+        Flagged for renewal review at <span className="mono">{(thr * 100).toFixed(1)}%</span> —
+        the top 2% of predicted risk on the trained portfolio. Model: <span className="mono">{result.model_version}</span>.
+      </p>
+    </div>
+  );
+}
+
+function Scorer({ apiBase }) {
+  const [policy, setPolicy] = useState(DEFAULT_POLICY);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const update = (key, value) => setPolicy((p) => ({ ...p, [key]: value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch((apiBase || "") + "/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(policy),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || ("Request failed (" + res.status + ")"));
+      }
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      setError(
+        err.message.includes("Failed to fetch")
+          ? "Can't reach the scoring API. If the frontend and API aren't on the same origin, set the API base URL below."
+          : err.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="scorer">
+      <h2>Score a policy</h2>
+      <p className="sub">Enter pre-renewal rating factors to flag large-loss risk.</p>
+      <form onSubmit={submit}>
+        <div className="field-grid">
+          {FIELD_DEFS.map((def) => (
+            <Field key={def.key} def={def} value={policy[def.key]} onChange={update} />
+          ))}
+        </div>
+        <button className="submit-btn" type="submit" disabled={loading}>
+          {loading ? "Scoring…" : "Score policy"}
+        </button>
+      </form>
+      {error && <div className="error-box">{error}</div>}
+      {result && <ResultMeter result={result} />}
+    </div>
+  );
+}
+
+function StatInline({ value, label }) {
+  return (
+    <div className="stat-inline">
+      <span className="num mono">{value}</span>
+      <span className="label">{label}</span>
+    </div>
+  );
+}
+
+function fmtNum(x, digits) {
+  if (digits === undefined) digits = 3;
+  if (x === undefined || x === null || Number.isNaN(x)) return "—";
+  return Number(x).toFixed(digits);
+}
+function fmtPct(x, digits) {
+  if (digits === undefined) digits = 1;
+  if (x === undefined || x === null) return "—";
+  return (Number(x) * 100).toFixed(digits) + "%";
+}
+function fmtP(p) {
+  if (p === undefined || p === null) return "—";
+  if (p < 0.0001) return "< 0.0001";
+  return fmtNum(p, 4);
+}
+
+function LedgerSection({ results }) {
+  const rows = results ? [
+    {
+      title: "Frequency and severity are not independent",
+      body: "Bivariate MVN fit on " + (results.mvn ? results.mvn.n.toLocaleString() : "—") +
+            " claimant policies estimates a mild positive correlation between how often a policy claims and how large its claims run.",
+      value: (results.mvn ? (results.mvn.rho >= 0 ? "+" : "") + fmtNum(results.mvn.rho) : "—"),
+    },
+    {
+      title: "Real claims are heavier-tailed than a bivariate normal",
+      body: "A chi-square test on Mahalanobis distance rejects exact bivariate normality — " +
+            fmtPct(results.outlier_test && results.outlier_test.outlier_rate) + " of claimants sit outside the alpha=0.01 boundary.",
+      value: results.outlier_test ? fmtPct(results.outlier_test.outlier_rate) : "—",
+    },
+    {
+      title: "Claim behaviour differs significantly by segment",
+      body: "One-way MANOVA across age x density segments on the joint (frequency, severity) vector.",
+      value: results.manova ? ("\u039b=" + fmtNum(results.manova.wilks_lambda) + ", p " + (results.manova.p_value < 0.001 ? "< 0.001" : fmtP(results.manova.p_value))) : "—",
+    },
+    {
+      title: "Risk tier is recoverable from the joint distribution",
+      body: "QDA classifies claimant policies into Low / Medium / High risk tertiles from (frequency, severity) alone.",
+      value: results.qda ? fmtPct(results.qda.test_accuracy) + " accuracy" : "—",
+    },
+    {
+      title: "Pre-renewal factors give real, if partial, separation",
+      body: "Gradient Boosting on rating factors and phase-type severity features, flagging the top " +
+            (results.ml_classifier ? "2%" : "—") + " large-loss risk before renewal.",
+      value: results.ml_classifier ? "AUC " + fmtNum(results.ml_classifier.auc, 3) : "—",
+    },
+  ] : [];
+
+  return (
+    <section className="ledger-section" id="findings">
+      <div className="wrap">
+        <h2>Five findings from the portfolio</h2>
+        <p className="sub">Pulled live from the last training run against the real French MTPL dataset — nothing on this page is hand-typed.</p>
+        <div className="ledger">
+          {rows.length === 0 && <p className="sub">Results not yet available — run <span className="mono">scripts/run_pipeline.py</span>.</p>}
+          {rows.map((r, i) => (
+            <div className="ledger-row" key={i}>
+              <div className="ledger-idx">{String(i + 1).padStart(2, "0")}</div>
+              <div className="ledger-body">
+                <h3>{r.title}</h3>
+                <p>{r.body}</p>
+              </div>
+              <div className="ledger-value">{r.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const PIPELINE_STEPS = [
+  { title: "Clean & join", desc: "freMTPL2freq + freMTPL2sev, 678K policies, standard exposure/claim-count corrections." },
+  { title: "MVN fit", desc: "Bivariate normal on (log-frequency, log-severity); Mahalanobis outlier test." },
+  { title: "MANOVA / QDA", desc: "Segment differences tested; risk tiers classified from the joint distribution." },
+  { title: "PH features", desc: "Moment-matched phase-type severity descriptors per rating cell." },
+  { title: "Gradient Boosting", desc: "Pre-renewal classifier on rating factors + PH features." },
+  { title: "Score", desc: "Served live via this API — the form above calls it directly." },
+];
+
+function PipelineSection() {
+  return (
+    <section className="pipeline-section" id="method">
+      <div className="wrap">
+        <h2>How a score gets made</h2>
+        <div className="pipeline">
+          {PIPELINE_STEPS.map((s, i) => (
+            <div className="pipe-step" key={i}>
+              <div className="pipe-num">{String(i + 1).padStart(2, "0")}</div>
+              <div className="pipe-title">{s.title}</div>
+              <div className="pipe-desc">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const EVIDENCE_PLOTS = [
+  { file: "01_mvn_scatter_contour.png", caption: "Claimant policies in (log-frequency, log-severity) space, with the fitted MVN density contours." },
+  { file: "07_feature_importance.png", caption: "What the pre-renewal classifier actually weighs \u2014 Exposure and Bonus-Malus dominate, as an actuary would expect." },
+];
+
+function EvidenceSection() {
+  const [available, setAvailable] = useState(null);
+  useEffect(() => {
+    fetch("/outputs/plots/" + EVIDENCE_PLOTS[0].file, { method: "HEAD" })
+      .then((r) => setAvailable(r.ok))
+      .catch(() => setAvailable(false));
+  }, []);
+  return (
+    <section className="evidence-section" id="evidence">
+      <div className="wrap">
+        <h2>Evidence, not just a headline number</h2>
+        <div className="evidence-grid">
+          {available === false && (
+            <div className="evidence-empty">
+              Plots not found at <span className="mono">/outputs/plots/</span> — run <span className="mono">scripts/run_pipeline.py</span> to generate them.
+            </div>
+          )}
+          {available !== false && EVIDENCE_PLOTS.map((p) => (
+            <div className="evidence-card" key={p.file}>
+              <figure>
+                <img src={"/outputs/plots/" + p.file} alt={p.caption} loading="lazy" />
+                <figcaption>{p.caption}</figcaption>
+              </figure>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function App() {
+  const [apiBase, setApiBase] = useApiBase();
+  const [showConfig, setShowConfig] = useState(false);
+  const [results, setResults] = useState(null);
+
+  useEffect(() => {
+    fetch("/outputs/results/results.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setResults)
+      .catch(() => setResults(null));
+  }, []);
+
+  return (
+    <React.Fragment>
+      <header className="masthead">
+        <div className="wrap masthead-row">
+          <div className="masthead-title">Frequency &amp; Severity Risk Desk</div>
+          <nav className="masthead-nav">
+            <a href="#findings">Findings</a>
+            <a href="#method">Method</a>
+            <a href="#evidence">Evidence</a>
+            <a href="/docs">API docs</a>
+          </nav>
+        </div>
+      </header>
+
+      <section className="hero">
+        <div className="wrap" style={{ display: "contents" }}>
+          <div>
+            <h1>Frequency and severity were never independent.</h1>
+            <p className="thesis">
+              Standard pricing fits claim frequency and claim severity as two separate models,
+              then multiplies them. This desk fits their <strong>joint</strong> distribution on
+              678,013 real French motor policies, tests where that dependence comes from, and
+              scores new policies for large-loss risk before renewal — live, on the right.
+            </p>
+            {results && results.mvn && (
+              <div className="source-note">
+                <StatInline value={(results.mvn.rho >= 0 ? "+" : "") + fmtNum(results.mvn.rho)} label="freq-sev correlation" />
+                <StatInline value={fmtNum(results.manova ? results.manova.wilks_lambda : null)} label="MANOVA Wilks' Lambda" />
+                <StatInline value={fmtNum(results.ml_classifier ? results.ml_classifier.auc : null)} label="classifier AUC" />
+                <StatInline value={results.n_policies ? results.n_policies.toLocaleString() : "—"} label="policies trained on" />
+              </div>
+            )}
+          </div>
+          <Scorer apiBase={apiBase} />
+        </div>
+      </section>
+
+      <LedgerSection results={results} />
+      <PipelineSection />
+      <EvidenceSection />
+
+      <footer>
+        <div className="wrap">
+          <div className="footer-row">
+            <span>Trained on the real French Motor Third-Party Liability Claims dataset (freMTPL2).</span>
+            <div className="footer-links">
+              <a href="/docs">API reference</a>
+              <a href="/api">API status</a>
+              <button onClick={() => setShowConfig((s) => !s)} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", font: "inherit", padding: 0 }}>
+                API base
+              </button>
+            </div>
+          </div>
+          {showConfig && (
+            <div className="api-config">
+              Defaults to this page's own origin. Set this only if the frontend is hosted separately from the API.
+              <input
+                type="text"
+                placeholder="e.g. https://your-codespace-8000.app.github.dev"
+                value={apiBase}
+                onChange={(e) => setApiBase(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+      </footer>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

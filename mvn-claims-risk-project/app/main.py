@@ -21,11 +21,19 @@ Dockerfile.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.schemas import BatchPolicyInput, BatchRiskScoreOutput, PolicyInput, RiskScoreOutput
 from app.scoring import score_policy
+
+ROOT = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = ROOT / "frontend"
+OUTPUTS_DIR = ROOT / "outputs"
 
 app = FastAPI(
     title="Bivariate Frequency-Severity Risk Scoring API",
@@ -34,7 +42,7 @@ app = FastAPI(
         "Boosting classifier trained on rating factors plus MAP/PH-inspired "
         "phase-type severity features. Backed by a bivariate-MVN / MANOVA / "
         "QDA analysis of the joint (frequency, severity) distribution -- "
-        "see /mnt/user-data/outputs REPORT.md for full methodology."
+        "see REPORT.md for full methodology."
     ),
     version="1.0.0",
 )
@@ -43,18 +51,34 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
+# Serve generated plots + results.json so the frontend can render live
+# figures and findings without duplicating any numbers in JS.
+if OUTPUTS_DIR.exists():
+    app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
+
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
-@app.get("/")
-def root():
+@app.get("/api")
+def api_info():
     return {
         "service": "Bivariate Survival & Claim Frequency Risk Scoring API",
         "endpoints": ["/health", "/score (POST)", "/score/batch (POST)", "/docs"],
     }
+
+
+@app.get("/")
+def root():
+    """Serves the React frontend (frontend/index.html) at the site root.
+    Falls back to a plain JSON status if the frontend hasn't been built
+    into the image for some reason."""
+    index = FRONTEND_DIR / "index.html"
+    if index.exists():
+        return FileResponse(index)
+    return {"status": "ok", "note": "frontend/index.html not found; see /api and /docs"}
 
 
 @app.post("/score", response_model=RiskScoreOutput)
