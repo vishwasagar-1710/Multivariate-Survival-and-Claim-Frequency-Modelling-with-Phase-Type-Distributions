@@ -5,3 +5,4 @@ data/raw/*.csv
 data/policy_claims.csv
 .env
 *.egg-info/
+venv/
