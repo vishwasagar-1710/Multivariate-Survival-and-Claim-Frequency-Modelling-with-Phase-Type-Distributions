@@ -1,0 +1,166 @@
+{
+  "data_source": "kaggle-real",
+  "n_policies": 678013,
+  "claim_rate": 0.0367898550617761,
+  "mvn": {
+    "mu_log_frequency": 0.5986806644967058,
+    "mu_log_severity": 6.8549993322740015,
+    "sigma": [
+      [
+        0.611075,
+        0.09256
+      ],
+      [
+        0.09256,
+        1.23848
+      ]
+    ],
+    "rho": 0.10639716776942172,
+    "n": 24944
+  },
+  "conditional_severity_given_frequency": {
+    "low_freq_p10": {
+      "log_frequency": 9.999994999180668e-07,
+      "conditional_mean_log_severity": 6.764317170911328,
+      "conditional_sd_log_severity": 1.1065531742819723,
+      "implied_median_severity": 866.3744201121697
+    },
+    "median_freq_p50": {
+      "log_frequency": 0.3011058327836477,
+      "conditional_mean_log_severity": 6.809925596673617,
+      "conditional_sd_log_severity": 1.1065531742819723,
+      "implied_median_severity": 906.803335253026
+    },
+    "high_freq_p90": {
+      "log_frequency": 1.6094381124340804,
+      "conditional_mean_log_severity": 7.0080990205177285,
+      "conditional_sd_log_severity": 1.1065531742819723,
+      "implied_median_severity": 1105.550876524127
+    }
+  },
+  "outlier_test": {
+    "critical_value_alpha_0.01": 9.21034037197618,
+    "n_outliers": 895,
+    "outlier_rate": 0.035880372033354715,
+    "ks_pvalue_vs_chi2": 0.0
+  },
+  "manova": {
+    "wilks_lambda": 0.9718033915051186,
+    "pillai_trace": 0.02822762736825409,
+    "f_stat": 71.83666620128133,
+    "df1": 10.0,
+    "df2": 49874.0,
+    "p_value": 0.0,
+    "group_means": {
+      "MidAge-Urban": {
+        "LogFrequency": 0.639,
+        "LogAvgSeverity": 6.8463
+      },
+      "MidAge-Rural": {
+        "LogFrequency": 0.5516,
+        "LogAvgSeverity": 6.8347
+      },
+      "Young-Urban": {
+        "LogFrequency": 0.8506,
+        "LogAvgSeverity": 6.8961
+      },
+      "Young-Rural": {
+        "LogFrequency": 0.8504,
+        "LogAvgSeverity": 6.8599
+      },
+      "Senior-Rural": {
+        "LogFrequency": 0.3645,
+        "LogAvgSeverity": 6.9764
+      },
+      "Senior-Urban": {
+        "LogFrequency": 0.492,
+        "LogAvgSeverity": 6.9248
+      }
+    }
+  },
+  "qda": {
+    "train_accuracy": 0.8393735300406243,
+    "test_accuracy": 0.8426876202694035,
+    "labels": [
+      "High",
+      "Low",
+      "Medium"
+    ],
+    "confusion_matrix": [
+      [
+        1890,
+        53,
+        135
+      ],
+      [
+        34,
+        1390,
+        699
+      ],
+      [
+        37,
+        23,
+        1975
+      ]
+    ]
+  },
+  "ml_classifier": {
+    "threshold_amount": 1128.5499999999838,
+    "auc": 0.7122394652393932,
+    "pr_auc": 0.06768677635652348,
+    "operating_threshold_proba": 0.7846246009193453,
+    "high_tier_threshold_proba": 0.8195087331909838,
+    "confusion_matrix": [
+      [
+        163135,
+        2965
+      ],
+      [
+        2978,
+        426
+      ]
+    ],
+    "top_features": [
+      {
+        "feature": "Exposure",
+        "importance": 0.431463511444604
+      },
+      {
+        "feature": "BonusMalus",
+        "importance": 0.30709346916531566
+      },
+      {
+        "feature": "DrivAge",
+        "importance": 0.08981251794794448
+      },
+      {
+        "feature": "VehAge",
+        "importance": 0.05380452098742655
+      },
+      {
+        "feature": "LogDensity",
+        "importance": 0.03989648907421194
+      },
+      {
+        "feature": "VehPower",
+        "importance": 0.012073220439227476
+      },
+      {
+        "feature": "VehBrand_B12",
+        "importance": 0.01065293976291941
+      },
+      {
+        "feature": "VehGas_Regular",
+        "importance": 0.008212429053000339
+      },
+      {
+        "feature": "Region_Rhone-Alpes",
+        "importance": 0.00739875095200163
+      },
+      {
+        "feature": "VehGas_Diesel",
+        "importance": 0.0038588651955461365
+      }
+    ]
+  }
+}
